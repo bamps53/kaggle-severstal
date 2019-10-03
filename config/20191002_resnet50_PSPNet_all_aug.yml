@@ -1,0 +1,63 @@
+work_dir: '/content/drive/My Drive/Severstal/20191002_resnet50_PSPNet_all_aug'
+
+data:
+  name: 'StealDataset'
+  train_dir: '../input/severstal-steel-defect-detection/train_images'
+  test_dir: '../input/severstal-steel-defect-detection/test_images'
+  sample_submission_path: '../input/severstal-steel-defect-detection/sample_submission.csv'
+  train_df_path: '../input/severstal-steel-defect-detection/train.csv'
+  params:
+    idx_fold: 0
+    num_folds: 5
+  num_classes: 4
+
+model:
+  arch: 'PSPNet'
+  encoder: 'resnet50'
+  pretrained: 'imagenet'
+
+train:
+  batch_size: 16
+  num_epochs: 40
+
+test:
+  batch_size: 16
+  best_threshold: 0.5
+  min_size: 700
+
+transforms:
+  train:
+    HorizontalFlip: True
+    VerticalFlip: True
+    Cutout:
+      num_holes: 10
+      hole_size: 25
+    RandomCropScale: True
+    RandomCropRotateScale: False #not prepared yet
+    Noise: True
+    Contrast: True
+  test:
+    HorizontalFlip: False
+    VerticalFlip: False
+    Cutout:
+      num_holes: 0
+      hole_size: 256//10
+    RandomCropScale: False #not prepared yet
+    RandomCropRotateScale: False #not prepared yet
+
+loss:
+  name: "BCEDice"
+  params:
+    focal_gamma: 2
+
+optimizer:
+  name: 'Adam'
+  params:
+    encoder_lr: 0.00001
+    decoder_lr: 0.001
+
+scheduler:
+  name: 'plateau'
+
+num_workers: 2
+device: 'cuda'
