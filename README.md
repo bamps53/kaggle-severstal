@@ -22,5 +22,6 @@ $ python ensemble.py --config_dir config/
 
 My code for this competition specific part is based on [this great starter kernel](https://www.kaggle.com/rishabhiitbhu/unet-starter-kernel-pytorch-lb-0-88)  
 
-[this kernel](https://www.kaggle.com/lightforever/severstal-mlcomp-catalyst-infer-0-90672) also inspired me a lot.
+[this kernel](https://www.kaggle.com/lightforever/severstal-mlcomp-catalyst-infer-0-90672) also inspired me a lot.  
+
 And I borrowed many idea from Heng's great disscussion topics.
