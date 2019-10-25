@@ -3,7 +3,12 @@ import os
 
 import cv2
 import numpy as np
+import segmentation_models_pytorch as smp
+from catalyst.dl.utils import load_checkpoint
 from catalyst.utils import set_global_seed, prepare_cudnn
+
+from models import CustomNet
+from .config import load_config
 
 
 def dict_to_json(dict_obj, file_name):
@@ -20,9 +25,7 @@ def prepare_train_directories(config):
     out_dir = config.train.dir
     os.makedirs(os.path.join(out_dir, 'checkpoint'), exist_ok=True)
 
-#from https://www.kaggle.com/rishabhiitbhu/unet-starter-kernel-pytorch-lb-0-88
-#and https://www.kaggle.com/amanooo/defect-detection-starter-u-net
-#and https://www.kaggle.com/go1dfish/clear-mask-visualization-and-simple-eda
+
 def mask2rle(img):
     '''
     img: numpy array, 1 - mask, 0 - background
@@ -67,3 +70,27 @@ def post_process(probability, threshold, min_size):
             predictions[p] = 1
             num += 1
     return predictions, num
+
+
+def load_model(config_path):
+    config = load_config(config_path)
+    print(config.checkpoint_path)
+
+    if config.model.arch == 'Classification':
+        model = CustomNet(config.model.encoder, config.data.num_classes, pretrained=False)
+    else:
+        # create segmentation model with pre-trained encoder
+        model = getattr(smp, config.model.arch)(
+            encoder_name=config.model.encoder,
+            encoder_weights=None,
+            classes=config.data.num_classes,
+            activation=None,
+        )
+
+    model.to(config.device)
+    model.eval()
+
+    checkpoint = load_checkpoint(config.checkpoint_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+
+    return model

@@ -1,4 +1,5 @@
 import numpy as np
+from catalyst.dl.core.callback import MetricCallback
 
 
 def dice_score(pred_mask, true_mask, empty_score=1.0, threshold=0.5):
@@ -17,3 +18,28 @@ def dice_score(pred_mask, true_mask, empty_score=1.0, threshold=0.5):
     intersection = np.logical_and(im1, im2)
 
     return 2. * intersection.sum() / im_sum
+
+
+def multi_class_accuracy(outputs, targets, threshold=0.5):
+    outputs = (outputs > threshold).float()
+    targets = targets.float()
+    tp = outputs.eq(targets).sum()
+    total = targets.shape[0] * targets.shape[1]
+    return tp.cpu().numpy() / total
+
+
+class MultiClassAccuracyCallback(MetricCallback):
+
+    def __init__(
+            self,
+            input_key: str = "targets",
+            output_key: str = "logits",
+            prefix: str = "accuracy",
+            threshold=0.5
+    ):
+        super().__init__(
+            prefix=prefix,
+            metric_fn=multi_class_accuracy,
+            input_key=input_key,
+            output_key=output_key,
+        )

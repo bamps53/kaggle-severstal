@@ -1,0 +1,58 @@
+work_dir: '002_resnet18_PSPNet_fold0'
+data:
+  name: 'StealDataset'
+  train_dir: '../input/severstal-steel-defect-detection/train_images'
+  test_dir: '../input/severstal-steel-defect-detection/test_images'
+  sample_submission_path: '../input/severstal-steel-defect-detection/sample_submission.csv'
+  train_df_path: '../input/severstal-steel-defect-detection/train.csv'
+  params:
+    idx_fold: 0
+    num_folds: 5
+  num_classes: 4
+
+model:
+  arch: 'PSPNet'
+  encoder: 'resnet18'
+  pretrained: 'imagenet'
+
+train:
+  batch_size: 16
+  num_epochs: 40
+
+test:
+  batch_size: 32
+  best_threshold: 0.5
+  min_size: [500, 300, 1000, 1000]
+
+transforms:
+  train:
+    HorizontalFlip: True
+    VerticalFlip: True
+    Cutout:
+      num_holes: 10
+      hole_size: 25
+    RandomCropScale: True
+  test:
+    HorizontalFlip: False
+    VerticalFlip: False
+    Cutout:
+      num_holes: 0
+      hole_size: 256//10
+    RandomCropScale: False
+
+loss:
+  name: "BCEDice"
+  params:
+    focal_gamma: 2
+
+optimizer:
+  name: 'Adam'
+  params:
+    encoder_lr: 0.00001
+    decoder_lr: 0.001
+
+scheduler:
+  name: 'plateau'
+
+num_workers: 2
+device: 'cuda'

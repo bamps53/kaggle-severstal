@@ -88,5 +88,5 @@ def get_optimizer(params, config):
     elif config.optimizer.name == "RAdam":
         optimizer = RAdam(params)
     elif config.optimizer.name == "SGD":
-        optimizer = torch.optim.SGD(params, momentum=0.9, weight_decay=0.0001)
+        optimizer = torch.optim.SGD(params)
     return optimizer

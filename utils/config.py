@@ -27,12 +27,14 @@ def _get_default_config():
     c.train.batch_size = 32
     c.train.num_epochs = 50
     c.train.mixup = False
+    c.train.cutmix = False
+    c.train.pseudo_label_path = 'dummy.csv'
 
     # test
     c.test = edict()
     c.test.batch_size = 32
     c.test.best_threshold = 0.5
-    c.test.min_size = [500, 500, 1000, 2000]
+    c.test.min_size = 3500
     c.test.tta = True
 
     # optimizer
@@ -53,9 +55,11 @@ def _get_default_config():
     c.transforms.train.HorizontalFlip = True
     c.transforms.train.VerticalFlip = True
     c.transforms.train.RandomCropScale = False
+    c.transforms.train.RandomCropRotateScale = False
     c.transforms.train.Cutout = edict()
     c.transforms.train.Cutout.num_holes = 0
     c.transforms.train.Cutout.hole_size = 25
+    c.transforms.train.CropSize = 0
     c.transforms.train.mean = [0.485, 0.456, 0.406]
     c.transforms.train.std = [0.229, 0.224, 0.225]
     c.transforms.train.Contrast = False
@@ -65,9 +69,11 @@ def _get_default_config():
     c.transforms.test.HorizontalFlip = False
     c.transforms.test.VerticalFlip = False
     c.transforms.test.RandomCropScale = False
+    c.transforms.test.RandomCropRotateScale = False
     c.transforms.test.Cutout = edict()
     c.transforms.test.Cutout.num_holes = 0
     c.transforms.test.Cutout.hole_size = 25
+    c.transforms.test.CropSize = 0
     c.transforms.test.mean = [0.485, 0.456, 0.406]
     c.transforms.test.std = [0.229, 0.224, 0.225]
     c.transforms.test.Contrast = False
@@ -81,6 +87,8 @@ def _get_default_config():
     c.device = 'cuda'
     c.num_workers = 2
     c.work_dir = './work_dir'
+    c.checkpoint_path = './checkpoints/best.pth'
+    c.debug = False
 
     return c
 

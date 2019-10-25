@@ -1,4 +1,5 @@
-work_dir: '/content/drive/My Drive/Severstal/20191002_resnet50_PSPNet_all_aug'
+work_dir: '003_resnet50_fpn_fold0'
+
 
 data:
   name: 'StealDataset'
@@ -12,7 +13,7 @@ data:
   num_classes: 4
 
 model:
-  arch: 'PSPNet'
+  arch: 'FPN'
   encoder: 'resnet50'
   pretrained: 'imagenet'
 
@@ -23,7 +24,7 @@ train:
 test:
   batch_size: 16
   best_threshold: 0.5
-  min_size: 700
+  min_size: [500, 300, 1000, 1000]
 
 transforms:
   train:
@@ -33,17 +34,12 @@ transforms:
       num_holes: 10
       hole_size: 25
     RandomCropScale: True
-    RandomCropRotateScale: False #not prepared yet
-    Noise: True
-    Contrast: True
   test:
     HorizontalFlip: False
     VerticalFlip: False
     Cutout:
       num_holes: 0
       hole_size: 256//10
-    RandomCropScale: False #not prepared yet
-    RandomCropRotateScale: False #not prepared yet
 
 loss:
   name: "BCEDice"

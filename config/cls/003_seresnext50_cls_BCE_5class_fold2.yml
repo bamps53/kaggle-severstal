@@ -1,0 +1,43 @@
+work_dir: '003_seresnext50_cls_BCE_5class_fold2'
+
+data:
+  name: 'StealDataset'
+  train_dir: '../input/severstal-steel-defect-detection/train_images'
+  test_dir: '../input/severstal-steel-defect-detection/test_images'
+  sample_submission_path: '../input/severstal-steel-defect-detection/sample_submission.csv'
+  train_df_path: '../input/severstal-steel-defect-detection/train.csv'
+  params:
+    idx_fold: 2
+    num_folds: 5
+  num_classes: 5
+
+model:
+  arch: 'Classification'
+  encoder: 'se_resnext50_32x4d'
+  pretrained: 'imagenet'
+
+train:
+  batch_size: 8
+  num_epochs: 40
+
+test:
+  batch_size: 4
+  best_threshold: 0.5
+  min_size: [500, 500, 1000, 2000]
+
+loss:
+  name: "BCE"
+  params:
+    focal_gamma: 0
+
+optimizer:
+  name: 'RAdam'
+  params:
+    decoder_lr: 0.001
+    encoder_lr: 0.0001
+
+scheduler:
+  name: 'plateau'
+
+num_workers: 8
+device: 'cuda'

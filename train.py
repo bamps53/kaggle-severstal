@@ -5,12 +5,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from catalyst.dl import SupervisedRunner
-from catalyst.dl.callbacks import CheckpointCallback, F1ScoreCallback
-from utils.metrics import MultiClassAccuracyCallback
-
-from models import CustomNet
+from catalyst.dl.callbacks import DiceCallback, IouCallback, CheckpointCallback, MixupCallback
+import segmentation_models_pytorch as smp
 
 from utils.config import load_config, save_config
+from utils.callbacks import CutMixCallback
 from datasets import make_loader
 from optimizers import get_optimizer
 from losses import get_loss
@@ -21,7 +20,8 @@ from transforms import get_transforms
 def run(config_file):
     config = load_config(config_file)
 
-    os.makedirs(config.work_dir, exist_ok=True)
+    if not os.path.exists(config.work_dir):
+        os.makedirs(config.work_dir, exist_ok=True)
     save_config(config, config.work_dir + '/config.yml')
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -41,19 +41,24 @@ def run(config_file):
             transforms=all_transforms[phase],
             num_classes=config.data.num_classes,
             pseudo_label_path=config.train.pseudo_label_path,
-            task='cls'
+            debug=config.debug
         )
         for phase in ['train', 'valid']
     }
 
-    # create model
-    model = CustomNet(config.model.encoder, config.data.num_classes)
+    # create segmentation model with pre trained encoder
+    model = getattr(smp, config.model.arch)(
+        encoder_name=config.model.encoder,
+        encoder_weights=config.model.pretrained,
+        classes=config.data.num_classes,
+        activation=None,
+    )
 
     # train setting
     criterion = get_loss(config)
     params = [
-        {'params': model.base_params(), 'lr': config.optimizer.params.encoder_lr},
-        {'params': model.fresh_params(), 'lr': config.optimizer.params.decoder_lr}
+        {'params': model.decoder.parameters(), 'lr': config.optimizer.params.decoder_lr},
+        {'params': model.encoder.parameters(), 'lr': config.optimizer.params.encoder_lr},
     ]
     optimizer = get_optimizer(params, config)
     scheduler = get_scheduler(optimizer, config)
@@ -61,9 +66,17 @@ def run(config_file):
     # model runner
     runner = SupervisedRunner(model=model)
 
-    callbacks = [MultiClassAccuracyCallback(threshold=0.5), F1ScoreCallback()]
+    callbacks = [DiceCallback(), IouCallback()]
+
+    # to resume from check points if exists
     if os.path.exists(config.work_dir + '/checkpoints/best.pth'):
         callbacks.append(CheckpointCallback(resume=config.work_dir + '/checkpoints/best_full.pth'))
+
+    if config.train.mixup:
+        callbacks.append(MixupCallback())
+
+    if config.train.cutmix:
+        callbacks.append(CutMixCallback())
 
     # model training
     runner.train(
@@ -83,7 +96,7 @@ def run(config_file):
 def parse_args():
     parser = argparse.ArgumentParser(description='Severstal')
     parser.add_argument('--config', dest='config_file',
-                        help='configuration filename',
+                        help='configuration file path',
                         default=None, type=str)
     return parser.parse_args()
 

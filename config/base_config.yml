@@ -1,0 +1,31 @@
+work_dir: '/kaggle/working'
+
+data:
+  name: 'StealDataset'
+  train_dir: '../input/severstal-steel-defect-detection/train_images'
+  test_dir: '../input/severstal-steel-defect-detection/test_images'
+  sample_submission_path: '../input/severstal-steel-defect-detection/sample_submission.csv'
+  train_df_path: '../input/severstal-steel-defect-detection/train.csv'
+  params:
+    idx_fold: 0
+    num_folds: 5
+  num_classes: 4
+
+test:
+  batch_size: 16
+  best_threshold: 0.5
+  min_size: [500, 500, 1000, 2000]
+  tta: True
+
+transforms:
+  test:
+    HorizontalFlip: False
+    VerticalFlip: False
+    Cutout:
+      num_holes: 0
+      hole_size: 25
+    RandomCropScale: False
+    CropSize: 0
+
+num_workers: 2
+device: 'cuda'
